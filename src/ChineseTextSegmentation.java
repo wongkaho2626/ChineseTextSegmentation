@@ -33,16 +33,17 @@ public class ChineseTextSegmentation {
 	    StringBuilder stringBuilder = new StringBuilder();  
 	    ComplexSeg seg = new ComplexSeg(dic);  
 	    MMSeg mmSeg = new MMSeg(reader, seg);  
-	    Word word = null;  
+	    Word word = null;
 	    boolean first = true;  
 	    while((word = mmSeg.next()) != null) {  
-	        if(stopwords.contains(word.getString())) {
-	        		break;
-	        }
+//	        if(stopwords.contains(word.getString())) {
+//	        		break;
+//	        }
+	    		String w = word.getString();
 	        if(!first) {  
         			stringBuilder.append(" | ");  
 	        }
-	        stringBuilder.append(word.getString());
+	        stringBuilder.append(w);
 	        first = false;
 	    }  
 	    return stringBuilder.toString();  
@@ -60,20 +61,49 @@ public class ChineseTextSegmentation {
 
 		ChineseTextSegmentation chineseTextSegmentation = new ChineseTextSegmentation();
 
-		//start do the Chinese text segmentation
-		JSONParser parser = new JSONParser();
-        JSONArray posts = (JSONArray) parser.parse(new FileReader("post.json"));
+		//start do the Chinese text segmentation on post
+		JSONParser parserPost = new JSONParser();
+        JSONArray posts = (JSONArray) parserPost.parse(new FileReader("post.json"));
         for(Object object : posts) {
         		JSONObject post = (JSONObject) object;
-        		String title = ChineseUtils.toTraditional((String) post.get("title"));
+        		String title = ChineseUtils.toTraditional(filterWord((String) post.get("title").toString().trim()));
         		String titleAfterSegmentation = chineseTextSegmentation.segmentation(title, stopwords);
         	    System.out.println(titleAfterSegmentation);
         	    	post.put("title", titleAfterSegmentation);
         }
+                
+        File filePost = new File("postAfterChineseTextSegmentation.json");
+		ObjectMapper mapperPost = new ObjectMapper();
+		mapperPost.writeValue(filePost, posts);
+		
+	    //start do the Chinese text segmentation on comment
+		JSONParser parserComment = new JSONParser();
+        JSONArray comments = (JSONArray) parserComment.parse(new FileReader("comment.json"));
+        for(Object object : comments) {
+        		JSONObject comment = (JSONObject) object;
+        		JSONArray contents = (JSONArray) comment.get("content");
+        		JSONArray newContents = new JSONArray();
+        		for(Object content : contents) {
+        			String s = ChineseUtils.toTraditional(filterWord((String) content.toString().trim()));
+        			String sAfterSegmentation = chineseTextSegmentation.segmentation(s, stopwords);
+        			newContents.add(sAfterSegmentation);
+        			System.out.println(sAfterSegmentation);
+        		}
+        		comment.put("content", newContents);
+        }
         
-        File file = new File("postAfterChineseTextSegmentation.json");
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.writeValue(file, posts);
+        File fileComment = new File("commentAfterChineseTextSegmentation.json");
+		ObjectMapper mapperComment = new ObjectMapper();
+		mapperComment.writeValue(fileComment, comments);
+	}
+	
+	private static String filterWord(String input) {
+		String output = input;
+		if(input.contains(" [ 本帖最後由")) {
+			int firstindexof = input.indexOf(" [ 本帖最後由");
+			output = input.substring(0, firstindexof);
+		}
+		return output;
 	}
 	
 }
