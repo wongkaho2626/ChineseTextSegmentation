@@ -21,6 +21,7 @@ import com.luhuiguo.chinese.ChineseUtils;
 public class ChineseTextSegmentation {
 	
 	protected Dictionary dic;  
+	private static final String COMMENT = "/Users/wongkaho/Eclipse Workspace/ChineseTextSegmentation/resource/comment";
 	
 	public ChineseTextSegmentation(){
 		//set the dictionary path
@@ -64,11 +65,13 @@ public class ChineseTextSegmentation {
 		//start do the Chinese text segmentation on post
 		JSONParser parserPost = new JSONParser();
         JSONArray posts = (JSONArray) parserPost.parse(new FileReader("post.json"));
+        int cntPost = 0;
         for(Object object : posts) {
         		JSONObject post = (JSONObject) object;
         		String title = ChineseUtils.toTraditional(filterWord((String) post.get("title").toString().trim()));
         		String titleAfterSegmentation = chineseTextSegmentation.segmentation(title, stopwords);
-        	    System.out.println(titleAfterSegmentation);
+        		cntPost++;
+        		System.out.println(cntPost);
         	    	post.put("title", titleAfterSegmentation);
         }
                 
@@ -77,8 +80,10 @@ public class ChineseTextSegmentation {
 		mapperPost.writeValue(filePost, posts);
 		
 	    //start do the Chinese text segmentation on comment
+		for(int i = 1500; i < 2721; i++) {
 		JSONParser parserComment = new JSONParser();
-        JSONArray comments = (JSONArray) parserComment.parse(new FileReader("comment.json"));
+        JSONArray comments = (JSONArray) parserComment.parse(new FileReader(COMMENT + i + ".json"));
+        int cntComment = 0;
         for(Object object : comments) {
         		JSONObject comment = (JSONObject) object;
         		JSONArray contents = (JSONArray) comment.get("content");
@@ -87,14 +92,16 @@ public class ChineseTextSegmentation {
         			String s = ChineseUtils.toTraditional(filterWord((String) content.toString().trim()));
         			String sAfterSegmentation = chineseTextSegmentation.segmentation(s, stopwords);
         			newContents.add(sAfterSegmentation);
-        			System.out.println(sAfterSegmentation);
+        			cntComment++;
+        			System.out.println(cntComment);
         		}
         		comment.put("content", newContents);
         }
         
-        File fileComment = new File("commentAfterChineseTextSegmentation.json");
+        File fileComment = new File(COMMENT + "AfterChineseTextSegmentation" + i + ".json");
 		ObjectMapper mapperComment = new ObjectMapper();
 		mapperComment.writeValue(fileComment, comments);
+		}
 	}
 	
 	private static String filterWord(String input) {
