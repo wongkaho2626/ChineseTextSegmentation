@@ -22,6 +22,8 @@ public class ChineseTextSegmentation {
 	
 	protected Dictionary dic;  
 	private static final String COMMENT = "/Users/wongkaho/Eclipse Workspace/ChineseTextSegmentation/resource/comment";
+	private static final String POST = "/Users/wongkaho/Eclipse Workspace/ChineseTextSegmentation/resource/post";
+
 	
 	public ChineseTextSegmentation(){
 		//set the dictionary path
@@ -42,7 +44,11 @@ public class ChineseTextSegmentation {
 //	        }
 	    		String w = word.getString();
 	        if(!first) {  
-        			stringBuilder.append(" | ");  
+		        	if (w.matches(".*[a-z].*")) { 
+		        		stringBuilder.append("  | "); 
+		        	}else {
+		        		stringBuilder.append(" | ");  
+		        	}
 	        }
 	        stringBuilder.append(w);
 	        first = false;
@@ -64,7 +70,7 @@ public class ChineseTextSegmentation {
 
 		//start do the Chinese text segmentation on post
 		JSONParser parserPost = new JSONParser();
-        JSONArray posts = (JSONArray) parserPost.parse(new FileReader("post.json"));
+        JSONArray posts = (JSONArray) parserPost.parse(new FileReader(POST + ".json"));
         int cntPost = 0;
         for(Object object : posts) {
         		JSONObject post = (JSONObject) object;
@@ -80,7 +86,7 @@ public class ChineseTextSegmentation {
 		mapperPost.writeValue(filePost, posts);
 		
 	    //start do the Chinese text segmentation on comment
-		for(int i = 1500; i < 2721; i++) {
+		for(int i = 1500; i < 2727; i++) {
 		JSONParser parserComment = new JSONParser();
         JSONArray comments = (JSONArray) parserComment.parse(new FileReader(COMMENT + i + ".json"));
         int cntComment = 0;
